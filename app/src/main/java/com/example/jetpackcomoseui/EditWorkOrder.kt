@@ -206,6 +206,7 @@ fun plannedUnplanned() {
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(start = 8.dp)
+                        .align(Alignment.Center)
                 )
             }
             Spacer(modifier = Modifier.width(1.dp))
@@ -235,6 +236,7 @@ fun plannedUnplanned() {
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(end = 8.dp)
+                        .align(Alignment.Center)
                 )
             }
         }
