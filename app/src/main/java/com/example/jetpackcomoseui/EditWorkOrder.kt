@@ -19,15 +19,18 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.material.icons.Icons
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -36,23 +39,32 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.Placeholder
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.jetpackcomoseui.ui.theme.Black
+import com.example.jetpackcomoseui.ui.theme.BlueViolet1
 import com.example.jetpackcomoseui.ui.theme.ColorDefault
+import com.example.jetpackcomoseui.ui.theme.LightGrey
+import com.example.jetpackcomoseui.ui.theme.TextWhite
+import com.example.jetpackcomoseui.ui.theme.hint_text_color
+import com.example.jetpackcomoseui.ui.theme.lightBlack
 import com.example.jetpackcomoseui.ui.theme.light_green
 import com.example.jetpackcomoseui.ui.theme.md_dark_green
 import com.example.jetpackcomoseui.ui.theme.md_red_warning
 import com.example.jetpackcomoseui.ui.theme.skyBlue
 import com.example.jetpackcomoseui.ui.theme.ultralight_blue
+import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
@@ -68,6 +80,7 @@ val fonts = FontFamily(
     Font(R.font.inter_semi_bold, FontWeight.SemiBold),
     Font(R.font.inter_thin, FontWeight.Thin),
 )
+
 
 @Composable
 fun FullScreen() {
@@ -138,7 +151,7 @@ fun saveButton() {
                 contentDescription = null,
                 tint = ColorDefault,
                 modifier = Modifier
-                    .padding(4.dp)
+                    .padding(end = 4.dp)
                     .size(24.dp)
                     .clickable {}
             )
@@ -152,6 +165,7 @@ fun saveButton() {
                     fontSize = 24.sp
                 ),
                 textAlign = TextAlign.Start,
+                modifier = Modifier.padding(end = 4.dp)
             )
         }
 
@@ -196,7 +210,7 @@ fun plannedUnplanned() {
             ) {
                 Text(
                     text = "UNPLANNED",
-                       style = TextStyle(
+                    style = TextStyle(
                         color = md_dark_green,
                         fontFamily = fonts,
                         fontWeight = FontWeight.SemiBold,
@@ -246,21 +260,27 @@ fun plannedUnplanned() {
 @Composable
 fun WorkOrderName() {
     var editText by remember { mutableStateOf("") }
-
+    var hint = "Enter Work Order name..."
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth(.9f)
             .padding(vertical = 4.dp)
     ) {
-        Icon(
-            painter = painterResource(id = R.drawable.ic_workorder_small),
-            contentDescription = "Name",
-            modifier = Modifier
-                .size(32.dp)
-                .padding(start = 8.dp, top = 6.dp)
 
-        )
+        Box(
+            modifier = Modifier
+                .align(Alignment.Bottom)
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_workorder_small),
+                contentDescription = "Name",
+                modifier = Modifier
+                    .size(32.dp)
+                    .padding(start = 8.dp)
+
+            )
+        }
 
         Spacer(modifier = Modifier.width(16.dp))
 
@@ -280,7 +300,6 @@ fun WorkOrderName() {
                 value = editText,
                 onValueChange = { text -> editText = text },
                 textStyle = TextStyle(
-                    color = ColorDefault,
                     fontFamily = fonts,
                     fontWeight = FontWeight.Medium,
                     fontSize = 16.sp
@@ -289,8 +308,21 @@ fun WorkOrderName() {
                     .fillMaxWidth()
                     .background(Color.White)
                     .height(32.dp),
-                maxLines = 1
+                maxLines = 1,
+                decorationBox = { innerTextField ->
+                    if (editText.isEmpty()) {
+                        Text(
+                            text = hint,
+                            fontSize = 16.sp,
+                            fontFamily = fonts,
+                            fontWeight = FontWeight.Medium,
+                            color = hint_text_color
+                        )
+                    }
+                    innerTextField()
+                }
             )
+
 
             Divider(color = ColorDefault, thickness = 1.dp)
         }
@@ -308,13 +340,18 @@ fun Status() {
             .fillMaxWidth(.9f)
             .padding(vertical = 4.dp)
     ) {
-        Icon(
-            painter = painterResource(id = R.drawable.ic_category_small),
-            contentDescription = "Status",
+        Box(
             modifier = Modifier
-                .size(32.dp)
-                .padding(start = 8.dp, top = 6.dp)
-        )
+                .align(Alignment.Bottom)
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_category_small),
+                contentDescription = "Status",
+                modifier = Modifier
+                    .size(32.dp)
+                    .padding(start = 8.dp)
+            )
+        }
 
         Spacer(modifier = Modifier.width(16.dp))
 
@@ -330,20 +367,7 @@ fun Status() {
                 modifier = Modifier.padding(start = 8.dp)
             )
 
-            Text(
-                text = status,
-                style = TextStyle(
-                    color = ColorDefault,
-                    fontFamily = fonts,
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 12.sp
-                ),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp)
-                    .clickable { }
-
-            )
+            genericDropDown(text = status, hint = "")
 
             Divider(color = ColorDefault, thickness = 1.dp)
 
@@ -354,6 +378,7 @@ fun Status() {
 @Composable
 fun Assets() {
     var selectedAsset by remember { mutableStateOf("") }
+    val assestHint = "Select Asset"
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -361,17 +386,23 @@ fun Assets() {
             .fillMaxWidth()
             .padding(4.dp)
     ) {
-        Image(
-            painter = painterResource(id = R.drawable.ic_asset_small),
-            contentDescription = "Assets",
+
+        Box(
             modifier = Modifier
-                .size(32.dp)
-                .padding(start = 6.dp)
-        )
+                .align(Alignment.Bottom)
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_asset_small),
+                contentDescription = "Assets",
+                modifier = Modifier
+                    .size(32.dp)
+                    .padding(start = 6.dp)
+            )
+        }
 
         Spacer(modifier = Modifier.width(16.dp))
 
-        Column(modifier = Modifier.fillMaxWidth(0.8f)) {
+        Column(modifier = Modifier.fillMaxWidth(0.7f)) {
             Text(
                 text = "Asset*",
                 style = TextStyle(
@@ -383,19 +414,7 @@ fun Assets() {
                 modifier = Modifier.padding(start = 8.dp)
             )
 
-            Text(
-                text = selectedAsset,
-                style = TextStyle(
-                    color = ColorDefault,
-                    fontFamily = fonts,
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 12.sp
-                ),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp)
-                    .clickable { }
-            )
+            genericDropDown(text = selectedAsset, hint = assestHint)
 
             Divider(color = ColorDefault, thickness = 1.dp)
         }
@@ -406,7 +425,7 @@ fun Assets() {
             painter = painterResource(id = R.drawable.ic_qr_20),
             contentDescription = "Scan",
             modifier = Modifier
-                .size(20.dp)
+                .size(24.dp)
                 .clickable {}
         )
     }
@@ -415,6 +434,7 @@ fun Assets() {
 @Composable
 fun Employee() {
     var employee by remember { mutableStateOf("") }
+    val employeeHint = "Select responsible employee"
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -422,13 +442,18 @@ fun Employee() {
             .fillMaxWidth(.9f)
             .padding(vertical = 4.dp)
     ) {
-        Icon(
-            painter = painterResource(id = R.drawable.ic_assignee_small),
-            contentDescription = "Employee",
+        Box(
             modifier = Modifier
-                .size(32.dp)
-                .padding(start = 6.dp)
-        )
+                .align(Alignment.Bottom)
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_assignee_small),
+                contentDescription = "Employee",
+                modifier = Modifier
+                    .size(32.dp)
+                    .padding(start = 8.dp)
+            )
+        }
 
         Spacer(modifier = Modifier.width(16.dp))
 
@@ -444,20 +469,7 @@ fun Employee() {
                 modifier = Modifier.padding(start = 8.dp)
             )
 
-            Text(
-                text = employee,
-                style = TextStyle(
-                    color = ColorDefault,
-                    fontFamily = fonts,
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 12.sp
-                ),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp)
-                    .clickable { }
-
-            )
+            genericDropDown(text = employee, hint = employeeHint)
 
             Divider(color = ColorDefault, thickness = 1.dp)
         }
@@ -467,6 +479,7 @@ fun Employee() {
 @Composable
 fun Teams() {
     var team by remember { mutableStateOf("") }
+    val teamsHint = "Select responsible team"
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -474,14 +487,19 @@ fun Teams() {
             .fillMaxWidth(.9f)
             .padding(vertical = 4.dp)
     ) {
-        Icon(
-            painter = painterResource(id = R.drawable.icon_team),
-            contentDescription = "Teams",
+        Box(
             modifier = Modifier
-                .size(32.dp)
-                .padding(start = 12.dp)
+                .align(Alignment.Bottom)
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.icon_team),
+                contentDescription = "Teams",
+                modifier = Modifier
+                    .size(32.dp)
+                    .padding(start = 12.dp)
 
-        )
+            )
+        }
 
         Spacer(modifier = Modifier.width(16.dp))
 
@@ -497,20 +515,7 @@ fun Teams() {
                 modifier = Modifier.padding(start = 6.dp)
             )
 
-            Text(
-                text = team,
-                style = TextStyle(
-                    color = ColorDefault,
-                    fontFamily = fonts,
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 12.sp
-                ),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp, start = 8.dp)
-                    .clickable { }
-
-            )
+            genericDropDown(text = team, hint = teamsHint)
 
             Divider(
                 color = ColorDefault,
@@ -538,13 +543,18 @@ fun DateAndTimeRow() {
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier.padding(vertical = 8.dp)
     ) {
-        Icon(
-            painter = painterResource(id = R.drawable.ic_icon_calendar_20),
-            contentDescription = "Due Date",
+        Box(
             modifier = Modifier
-                .size(32.dp)
-                .padding(start = 12.dp, top = 6.dp)
-        )
+                .align(Alignment.Bottom)
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_icon_calendar_20),
+                contentDescription = "Due Date",
+                modifier = Modifier
+                    .size(32.dp)
+                    .padding(start = 12.dp, bottom = 4.dp)
+            )
+        }
 
         Spacer(modifier = Modifier.width(16.dp))
 
@@ -617,6 +627,7 @@ fun DateAndTimeRow() {
 @Composable
 fun EstimatedTime() {
     var estimated by remember { mutableStateOf("") }
+    var hint = "Estimated time in hours..."
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -624,13 +635,18 @@ fun EstimatedTime() {
             .fillMaxWidth(.9f)
             .padding(vertical = 4.dp)
     ) {
-        Icon(
-            painter = painterResource(id = R.drawable.ic_workorder_small),
-            contentDescription = "Time",
+        Box(
             modifier = Modifier
-                .size(32.dp)
-                .padding(start = 8.dp)
-        )
+                .align(Alignment.Bottom)
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_workorder_small),
+                contentDescription = "Time",
+                modifier = Modifier
+                    .size(32.dp)
+                    .padding(start = 8.dp)
+            )
+        }
 
         Spacer(modifier = Modifier.width(16.dp))
 
@@ -648,12 +664,24 @@ fun EstimatedTime() {
 
             BasicTextField(
                 value = estimated,
-                onValueChange = { text -> estimated = text.replace(Regex("[^0-9]"),"") },
+                onValueChange = { text -> estimated = text.replace(Regex("[^0-9]"), "") },
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(Color.White)
                     .height(32.dp),
-                maxLines = 1
+                maxLines = 1,
+                decorationBox = { innerTextField ->
+                    if (estimated.isEmpty()) {
+                        Text(
+                            text = hint,
+                            fontSize = 14.sp,
+                            fontFamily = fonts,
+                            fontWeight = FontWeight.Normal,
+                            color = hint_text_color
+                        )
+                    }
+                    innerTextField()
+                }
             )
 
             Divider(color = ColorDefault, thickness = 1.dp)
@@ -671,13 +699,19 @@ fun Category() {
             .fillMaxWidth(.9f)
             .padding(vertical = 4.dp)
     ) {
-        Icon(
-            painter = painterResource(id = R.drawable.ic_category_small),
-            contentDescription = "Category",
+        Box(
             modifier = Modifier
-                .size(32.dp)
-                .padding(start = 8.dp)
-        )
+                .align(Alignment.Bottom)
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_category_small),
+                contentDescription = "Category",
+                modifier = Modifier
+                    .size(32.dp)
+                    .padding(start = 8.dp)
+            )
+        }
+
 
         Spacer(modifier = Modifier.width(16.dp))
 
@@ -693,20 +727,7 @@ fun Category() {
                 modifier = Modifier.padding(start = 6.dp)
             )
 
-            Text(
-                text = category,
-                style = TextStyle(
-                    color = ColorDefault,
-                    fontFamily = fonts,
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 12.sp
-                ),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp)
-                    .clickable { }
-
-            )
+            genericDropDown(text = category, hint = "")
 
             Divider(color = ColorDefault, thickness = 1.dp)
         }
@@ -716,6 +737,7 @@ fun Category() {
 @Composable
 fun Description() {
     var description by remember { mutableStateOf("") }
+    var hint = "Enter a brief description"
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -723,13 +745,18 @@ fun Description() {
             .fillMaxWidth(.9f)
             .padding(vertical = 4.dp)
     ) {
-        Icon(
-            painter = painterResource(id = R.drawable.ic_text_small),
-            contentDescription = "Description",
+        Box(
             modifier = Modifier
-                .size(32.dp)
-                .padding(start = 8.dp)
-        )
+                .align(Alignment.Bottom)
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_text_small),
+                contentDescription = "Description",
+                modifier = Modifier
+                    .size(32.dp)
+                    .padding(start = 8.dp)
+            )
+        }
 
         Spacer(modifier = Modifier.width(16.dp))
 
@@ -753,7 +780,6 @@ fun Description() {
                     value = description,
                     onValueChange = { text -> description = text },
                     textStyle = TextStyle(
-                        color = ColorDefault,
                         fontFamily = fonts,
                         fontWeight = FontWeight.Medium,
                         fontSize = 12.sp
@@ -762,7 +788,19 @@ fun Description() {
                         .weight(1f)
                         .background(Color.White)
                         .height(32.dp),
-                    maxLines = 3
+                    maxLines = 3,
+                    decorationBox = { innerTextField ->
+                        if (description.isEmpty()) {
+                            Text(
+                                text = hint,
+                                fontSize = 14.sp,
+                                fontFamily = fonts,
+                                fontWeight = FontWeight.Normal,
+                                color = hint_text_color
+                            )
+                        }
+                        innerTextField()
+                    }
                 )
 
                 Icon(
@@ -794,13 +832,18 @@ fun PriorityRow() {
             .fillMaxWidth()
             .padding(vertical = 8.dp)
     ) {
-        Image(
-            painter = painterResource(id = R.drawable.ic_priority_small),
-            contentDescription = "Priority",
+        Box(
             modifier = Modifier
-                .size(32.dp)
-                .padding(start = 8.dp)
-        )
+                .align(Alignment.Bottom)
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_priority_small),
+                contentDescription = "Priority",
+                modifier = Modifier
+                    .size(32.dp)
+                    .padding(start = 8.dp, bottom = 2.dp)
+            )
+        }
 
         Column {
             Text(
@@ -893,6 +936,7 @@ fun PriorityRow() {
 @Composable
 fun Tags() {
     var tags by remember { mutableStateOf("") }
+    val tagstHint = "Select one or more tags"
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -900,13 +944,18 @@ fun Tags() {
             .fillMaxWidth(.9f)
             .padding(vertical = 4.dp)
     ) {
-        Icon(
-            painter = painterResource(id = R.drawable.ic_tag_small),
-            contentDescription = "Tags",
+        Box(
             modifier = Modifier
-                .size(32.dp)
-                .padding(start = 8.dp)
-        )
+                .align(Alignment.Bottom)
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_tag_small),
+                contentDescription = "Tags",
+                modifier = Modifier
+                    .size(32.dp)
+                    .padding(start = 8.dp)
+            )
+        }
 
         Spacer(modifier = Modifier.width(16.dp))
 
@@ -922,20 +971,7 @@ fun Tags() {
                 modifier = Modifier.padding(start = 6.dp)
             )
 
-            Text(
-                text = tags,
-                style = TextStyle(
-                    color = ColorDefault,
-                    fontFamily = fonts,
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 12.sp
-                ),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp)
-                    .clickable { }
-
-            )
+            genericDropDown(text = tags, hint = tagstHint)
 
             Divider(color = ColorDefault, thickness = 1.dp)
         }
@@ -952,13 +988,19 @@ fun Checklist() {
             .fillMaxWidth(.9f)
             .padding(vertical = 4.dp)
     ) {
-        Icon(
-            painter = painterResource(id = R.drawable.ic_workorder_small),
-            contentDescription = "checklist",
+        Box(
             modifier = Modifier
-                .size(32.dp)
-                .padding(start = 8.dp)
-        )
+                .align(Alignment.Bottom)
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_workorder_small),
+                contentDescription = "checklist",
+                modifier = Modifier
+                    .size(32.dp)
+
+                    .padding(start = 8.dp)
+            )
+        }
 
         Spacer(modifier = Modifier.width(16.dp))
 
@@ -974,20 +1016,7 @@ fun Checklist() {
                 modifier = Modifier.padding(start = 6.dp)
             )
 
-            Text(
-                text = checklist,
-                style = TextStyle(
-                    color = ColorDefault,
-                    fontFamily = fonts,
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 12.sp
-                ),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp)
-                    .clickable { }
-
-            )
+            genericDropDown(text = checklist, hint = "")
 
             Divider(color = ColorDefault, thickness = 1.dp)
         }
@@ -1002,6 +1031,7 @@ fun SpareParts() {
             .fillMaxWidth(.9f)
             .fillMaxHeight(.1f)
     ) {
+
         Image(
             painter = painterResource(id = R.drawable.ic_part_small),
             contentDescription = "Spare Parts",
@@ -1029,20 +1059,97 @@ fun SpareParts() {
             modifier = Modifier.size(24.dp)
         )
     }
+
+    SparePartsList()
 }
 
 @Composable
 fun SparePartsList() {
-
     val sparePartsList = remember { listOf("", "") }
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 8.dp, start = 24.dp, end = 8.dp)
+    ) {
+        sparePartsList.forEach { s ->
+            SparePartRow(spareParts = s)
+        }
+    }
+}
 
-    LazyColumn {
-        items(sparePartsList.size) { sparePart ->
-            Row(
+@Composable
+fun SparePartRow(spareParts: String) {
+    val text = "Abcdefg"
+    var editText by remember { mutableStateOf("1") }
+    Surface(
+        shape = RoundedCornerShape(10.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(80.dp)
+            .padding(10.dp),
+        color = skyBlue
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
+                    .fillMaxWidth(.8f)
+                    .weight(1f)
                     .padding(start = 16.dp)
-            ) {}
+            ) {
+                Text(
+                    text = text,
+                    fontSize = 20.sp,
+                    fontFamily = fonts,
+                    color = ColorDefault,
+                    modifier = Modifier.padding(bottom = 4.dp)
+                )
+
+                Row {
+
+                    Icon(
+                        painter = painterResource(R.drawable.ic_quantity),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(24.dp)
+                            .padding(bottom = 4.dp),
+                    )
+
+                    Text(
+                        text = text,
+                        fontSize = 14.sp,
+                        fontFamily = fonts,
+                        color = ColorDefault,
+                        modifier = Modifier.padding(bottom = 4.dp, start = 8.dp)
+                    )
+
+                }
+
+            }
+
+            BasicTextField(
+                value = editText,
+                onValueChange = { text -> editText = text },
+                textStyle = LocalTextStyle.current.copy(textAlign = TextAlign.Center),
+                modifier = Modifier
+                    .padding(end = 16.dp)
+                    .width(40.dp)
+                    .clip(RoundedCornerShape(2.dp))
+                    .background(TextWhite),
+            )
+
+            Icon(
+                painter = painterResource(R.drawable.icon_delete_20),
+                tint = ColorDefault,
+                contentDescription = null,
+                modifier = Modifier
+                    .size(35.dp)
+                    .padding(8.dp)
+                    .clickable { },
+            )
         }
     }
 }
@@ -1054,7 +1161,8 @@ fun Attachments() {
         modifier = Modifier
             .fillMaxWidth(.9f)
     ) {
-        Image(
+
+        Icon(
             painter = painterResource(id = R.drawable.ic_attachment_small),
             contentDescription = "Documents",
             modifier = Modifier
@@ -1081,6 +1189,125 @@ fun Attachments() {
             modifier = Modifier.size(24.dp)
         )
     }
+
+    DocumentList()
+}
+
+@Composable
+fun DocumentList() {
+    val documentList =
+        remember { listOf("akdsndksdnskdnskdsknsdnskdsnkskdnsdnskdsnksnksdks", "b", "c") }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 8.dp, start = 24.dp, end = 8.dp)
+    ) {
+        documentList.forEach { document ->
+            DocumentRow(item = document)
+        }
+    }
+}
+
+@Composable
+fun DocumentRow(item: String) {
+    val itemDate = "123"
+    val category = "pta nhi"
+    var isImageLoaded by remember { mutableStateOf(false) }
+    var imageResource : Painter? = null
+
+    Card(
+        shape = RoundedCornerShape(10.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = light_green,
+        ),
+        modifier = Modifier
+            .fillMaxWidth()
+            .fillMaxHeight(.2f)
+            .padding(8.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp)
+                .background(light_green),
+
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+
+            Box(
+                modifier = Modifier
+                    .size(height = 56.dp, width = 58.dp)
+                    .clip(RoundedCornerShape(10.dp))
+            ) {
+                if (imageResource == null || !isImageLoaded) {
+                    CircularProgressIndicator(
+                        color = skyBlue,
+                        strokeWidth = Dp(value = 4F)
+                    )
+                    imageResource = painterResource(id = R.drawable.ic_assignee_small)
+                }
+                imageResource?.let { i ->
+                    Image(
+                        painter = i,
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+
+
+                if (imageResource != null && !isImageLoaded) {
+                    LaunchedEffect(true) {
+                        delay(2000)
+                        isImageLoaded = true
+                    }
+                }
+            }
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth(.9f)
+                    .padding(horizontal = 8.dp)
+                    .weight(1f)
+            ) {
+                Text(
+                    text = item,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 16.dp),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    fontFamily = FontFamily.Default,
+                    fontSize = 16.sp,
+                    color = Color.Black
+                )
+
+                Text(
+                    text = "$itemDate - $category",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.CenterHorizontally)
+                        .padding(top = 8.dp, start = 8.dp),
+                    fontSize = 12.sp,
+                    color = Color.Black
+                )
+            }
+
+            Icon(
+                painter = painterResource(R.drawable.ic_more_detail),
+                // apply condition when api response failed
+                // painterResource(R.drawable.ic_cross_small),
+                tint = ColorDefault,
+                contentDescription = null,
+                modifier = Modifier
+                    .size(30.dp)
+                    .padding(end = 4.dp)
+                    .clickable {}
+            )
+
+        }
+    }
 }
 
 @Composable
@@ -1100,6 +1327,7 @@ fun DynamicView(customField: List<String>) {
 @Composable
 fun CustomFields(customField: String) {
     var fieldValue by remember { mutableStateOf("") }
+    var hint = "Numeric"
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -1107,13 +1335,18 @@ fun CustomFields(customField: String) {
             .fillMaxWidth(.9f)
             .padding(vertical = 4.dp)
     ) {
-        Icon(
-            painter = painterResource(id = R.drawable.ic_icon_edit),
-            contentDescription = "Custom Field",
+        Box(
             modifier = Modifier
-                .size(24.dp)
-                .padding(start = 8.dp)
-        )
+                .align(Alignment.Bottom)
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_icon_edit),
+                contentDescription = "Custom Field",
+                modifier = Modifier
+                    .size(32.dp)
+                    .padding(start = 8.dp, bottom = 6.dp)
+            )
+        }
 
         Spacer(modifier = Modifier.width(16.dp))
 
@@ -1136,18 +1369,22 @@ fun CustomFields(customField: String) {
                         .fillMaxWidth()
                         .background(Color.White)
                         .height(32.dp),
-                    maxLines = 1
+                    maxLines = 1,
+                    decorationBox = { innerTextField ->
+                        if (fieldValue.isEmpty()) {
+                            Text(
+                                text = hint,
+                                fontSize = 14.sp,
+                                fontFamily = fonts,
+                                fontWeight = FontWeight.Normal,
+                                color = hint_text_color
+                            )
+                        }
+                        innerTextField()
+                    }
                 )
             } else {
-                Text(
-                    text = fieldValue,
-                    fontSize = 12.sp,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 8.dp)
-                        .clickable { }
-
-                )
+                genericDropDown(fieldValue, "")
             }
 
 
@@ -1220,24 +1457,36 @@ fun ShowMore() {
 }
 
 @Composable
-fun DropdownWithLine() {
-    Box(
-        modifier = Modifier.fillMaxWidth(),
-        contentAlignment = Alignment.BottomEnd
+fun genericDropDown(text: String, hint: String) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.fillMaxWidth()
     ) {
-        Box(
+        Text(
+            text = if (text.isNullOrEmpty()) hint else text,
+            style = TextStyle(
+                color = if (text.isNullOrEmpty()) hint_text_color else ColorDefault,
+                fontFamily = fonts,
+                fontWeight = FontWeight.Medium,
+                fontSize = 12.sp
+            ),
             modifier = Modifier
-                .fillMaxWidth()
-                .height(1.dp)
-                .background(Color.Gray),
+                .fillMaxWidth(.9f)
+                .weight(1f)
+                .padding(top = 8.dp)
+                .clickable {}
+
         )
+
         Icon(
             painter = painterResource(id = R.drawable.ic_dropdown),
-            contentDescription = "Drop Down",
+            tint = ColorDefault,
+            contentDescription = "drop down",
             modifier = Modifier
-                .size(24.dp)
-                .padding(4.dp)
+                .size(32.dp)
+                .padding(start = 4.dp)
         )
+
     }
 }
 
