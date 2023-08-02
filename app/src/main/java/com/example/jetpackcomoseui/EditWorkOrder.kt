@@ -353,7 +353,8 @@ fun Status() {
             contentDescription = "Status",
             modifier = Modifier
                 .size(32.dp)
-                .padding(start = 8.dp)
+                .wrapContentHeight(Alignment.Bottom)
+                .padding(start = 8.dp )
         )
 
         Spacer(modifier = Modifier.width(16.dp))
@@ -560,7 +561,7 @@ fun DateAndTimeRow() {
                 contentDescription = "Due Date",
                 modifier = Modifier
                     .size(32.dp)
-                    .padding(start = 12.dp, bottom = 4.dp)
+                    .padding(start = 12.dp, bottom = 10.dp)
             )
         }
 
