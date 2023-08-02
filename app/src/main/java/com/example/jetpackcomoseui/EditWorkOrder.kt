@@ -1,11 +1,14 @@
 package com.example.jetpackcomoseui
 
+import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -15,6 +18,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -25,8 +30,9 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -38,10 +44,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.Placeholder
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -52,17 +55,19 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.jetpackcomoseui.ui.theme.BackgroundColor
 import com.example.jetpackcomoseui.ui.theme.Black
-import com.example.jetpackcomoseui.ui.theme.BlueViolet1
 import com.example.jetpackcomoseui.ui.theme.ColorDefault
-import com.example.jetpackcomoseui.ui.theme.LightGrey
-import com.example.jetpackcomoseui.ui.theme.TextWhite
+import com.example.jetpackcomoseui.ui.theme.White
+import com.example.jetpackcomoseui.ui.theme.greenTransparent
 import com.example.jetpackcomoseui.ui.theme.hint_text_color
 import com.example.jetpackcomoseui.ui.theme.lightBlack
 import com.example.jetpackcomoseui.ui.theme.light_green
 import com.example.jetpackcomoseui.ui.theme.md_dark_green
 import com.example.jetpackcomoseui.ui.theme.md_red_warning
+import com.example.jetpackcomoseui.ui.theme.mediumBlack
 import com.example.jetpackcomoseui.ui.theme.skyBlue
+import com.example.jetpackcomoseui.ui.theme.ultralightGreyBlue
 import com.example.jetpackcomoseui.ui.theme.ultralight_blue
 import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
@@ -81,12 +86,14 @@ val fonts = FontFamily(
     Font(R.font.inter_thin, FontWeight.Thin),
 )
 
+val dropDownList = listOf("1", "2", "3", "4", "5")
+
 
 @Composable
 fun FullScreen() {
     LazyColumn(
         modifier = Modifier
-            .background(Color.White)
+            .background(BackgroundColor)
             .fillMaxSize()
     ) {
         item {
@@ -187,7 +194,7 @@ fun saveButton() {
 fun plannedUnplanned() {
     var selectedOption by remember { mutableStateOf("unplanned") }
 
-    Surface(color = Color.White) {
+    Surface(color = BackgroundColor) {
         Row(
             modifier = Modifier.padding(12.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -284,7 +291,10 @@ fun WorkOrderName() {
 
         Spacer(modifier = Modifier.width(16.dp))
 
-        Column {
+        Column(
+            verticalArrangement = Arrangement.Bottom,
+            modifier = Modifier.padding(start = 8.dp)
+        ) {
             Text(
                 text = "Name*",
                 style = TextStyle(
@@ -293,36 +303,37 @@ fun WorkOrderName() {
                     fontWeight = FontWeight.Normal,
                     fontSize = 12.sp
                 ),
-                modifier = Modifier.padding(start = 8.dp)
             )
 
-            BasicTextField(
-                value = editText,
-                onValueChange = { text -> editText = text },
-                textStyle = TextStyle(
-                    fontFamily = fonts,
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 16.sp
-                ),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color.White)
-                    .height(32.dp),
-                maxLines = 1,
-                decorationBox = { innerTextField ->
-                    if (editText.isEmpty()) {
-                        Text(
-                            text = hint,
-                            fontSize = 16.sp,
-                            fontFamily = fonts,
-                            fontWeight = FontWeight.Medium,
-                            color = hint_text_color
-                        )
+
+                BasicTextField(
+                    value = editText,
+                    onValueChange = { text -> editText = text },
+                    textStyle = TextStyle(
+                        fontFamily = fonts,
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 16.sp,
+                        textAlign = TextAlign.Justify
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(BackgroundColor)
+                        .height(IntrinsicSize.Min),
+                    maxLines = 1,
+                    decorationBox = { innerTextField ->
+                        if (editText.isEmpty()) {
+                            Text(
+                                text = hint,
+                                fontSize = 16.sp,
+                                fontFamily = fonts,
+                                fontWeight = FontWeight.Medium,
+                                color = hint_text_color,
+                                modifier = Modifier.wrapContentHeight(Alignment.Bottom)
+                            )
+                        }
+                        innerTextField()
                     }
-                    innerTextField()
-                }
-            )
-
+                )
 
             Divider(color = ColorDefault, thickness = 1.dp)
         }
@@ -331,31 +342,27 @@ fun WorkOrderName() {
 
 @Composable
 fun Status() {
-    var status by remember { mutableStateOf("") }
-
     Row(
         verticalAlignment = Alignment.CenterVertically,
-
         modifier = Modifier
             .fillMaxWidth(.9f)
             .padding(vertical = 4.dp)
     ) {
-        Box(
+        Icon(
+            painter = painterResource(id = R.drawable.ic_category_small),
+            contentDescription = "Status",
             modifier = Modifier
-                .align(Alignment.Bottom)
-        ) {
-            Icon(
-                painter = painterResource(id = R.drawable.ic_category_small),
-                contentDescription = "Status",
-                modifier = Modifier
-                    .size(32.dp)
-                    .padding(start = 8.dp)
-            )
-        }
+                .size(32.dp)
+                .padding(start = 8.dp)
+        )
 
         Spacer(modifier = Modifier.width(16.dp))
 
-        Column {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(start = 8.dp)
+        ) {
             Text(
                 text = "Status",
                 style = TextStyle(
@@ -363,14 +370,11 @@ fun Status() {
                     fontFamily = fonts,
                     fontWeight = FontWeight.Normal,
                     fontSize = 12.sp
-                ),
-                modifier = Modifier.padding(start = 8.dp)
+                )
             )
-
-            genericDropDown(text = status, hint = "")
+            dropDownMenuList(items = dropDownList)
 
             Divider(color = ColorDefault, thickness = 1.dp)
-
         }
     }
 }
@@ -402,7 +406,7 @@ fun Assets() {
 
         Spacer(modifier = Modifier.width(16.dp))
 
-        Column(modifier = Modifier.fillMaxWidth(0.7f)) {
+        Column(modifier = Modifier.fillMaxWidth(0.7f).padding(start = 4.dp)) {
             Text(
                 text = "Asset*",
                 style = TextStyle(
@@ -410,13 +414,15 @@ fun Assets() {
                     fontFamily = fonts,
                     fontWeight = FontWeight.Normal,
                     fontSize = 12.sp
-                ),
-                modifier = Modifier.padding(start = 8.dp)
+                )
             )
 
-            genericDropDown(text = selectedAsset, hint = assestHint)
+            dropDownIcon(text = selectedAsset, hint = assestHint)
 
-            Divider(color = ColorDefault, thickness = 1.dp)
+            Divider(
+                color = ColorDefault,
+                thickness = 1.dp,
+            )
         }
 
         Spacer(modifier = Modifier.width(16.dp))
@@ -425,7 +431,8 @@ fun Assets() {
             painter = painterResource(id = R.drawable.ic_qr_20),
             contentDescription = "Scan",
             modifier = Modifier
-                .size(24.dp)
+                .size(32.dp)
+                .padding(start = 8.dp, top = 6.dp)
                 .clickable {}
         )
     }
@@ -457,7 +464,7 @@ fun Employee() {
 
         Spacer(modifier = Modifier.width(16.dp))
 
-        Column {
+        Column( modifier = Modifier.padding(start = 8.dp)) {
             Text(
                 text = "Employee*",
                 style = TextStyle(
@@ -465,13 +472,16 @@ fun Employee() {
                     fontFamily = fonts,
                     fontWeight = FontWeight.Normal,
                     fontSize = 12.sp
-                ),
-                modifier = Modifier.padding(start = 8.dp)
+                )
             )
 
-            genericDropDown(text = employee, hint = employeeHint)
+            dropDownIcon(text = employee, hint = employeeHint)
 
-            Divider(color = ColorDefault, thickness = 1.dp)
+            Divider(
+                color = ColorDefault,
+                thickness = 1.dp,
+
+            )
         }
     }
 }
@@ -503,7 +513,7 @@ fun Teams() {
 
         Spacer(modifier = Modifier.width(16.dp))
 
-        Column {
+        Column( modifier = Modifier.padding(start = 6.dp)) {
             Text(
                 text = "Team*",
                 style = TextStyle(
@@ -511,16 +521,14 @@ fun Teams() {
                     fontFamily = fonts,
                     fontWeight = FontWeight.Normal,
                     fontSize = 12.sp
-                ),
-                modifier = Modifier.padding(start = 6.dp)
+                )
             )
 
-            genericDropDown(text = team, hint = teamsHint)
+            dropDownIcon(text = team, hint = teamsHint)
 
             Divider(
                 color = ColorDefault,
-                thickness = 1.dp,
-                modifier = Modifier.padding(start = 8.dp)
+                thickness = 1.dp
             )
         }
     }
@@ -570,20 +578,35 @@ fun DateAndTimeRow() {
                     fontFamily = fonts,
                     fontWeight = FontWeight.Normal,
                     fontSize = 12.sp
-                ),
-                modifier = Modifier
-                    .padding(start = 8.dp)
-            )
-
-            Text(
-                text = date,
-                style = TextStyle(
-                    color = Black,
-                    fontFamily = fonts,
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 12.sp
                 )
             )
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+
+                Text(
+                    text = date,
+                    style = TextStyle(
+                        color = Black,
+                        fontFamily = fonts,
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 12.sp
+                    )
+
+                )
+
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_dropdown),
+                    tint = ColorDefault,
+                    contentDescription = "drop down",
+                    modifier = Modifier
+                        .size(32.dp)
+                        .padding(start = 4.dp)
+                )
+
+            }
 
             Divider(color = ColorDefault, thickness = 1.dp)
         }
@@ -602,22 +625,36 @@ fun DateAndTimeRow() {
                     fontFamily = fonts,
                     fontWeight = FontWeight.Normal,
                     fontSize = 12.sp
-                ),
-                modifier = Modifier
-                    .padding(start = 8.dp)
+                )
             )
 
-            Text(
-                text = time,
-                style = TextStyle(
-                    color = Black,
-                    fontFamily = fonts,
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 12.sp
-                ),
-                modifier = Modifier
-                    .padding(start = 16.dp)
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = time,
+                    style = TextStyle(
+                        color = Black,
+                        fontFamily = fonts,
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 12.sp
+                    ),
+                    modifier = Modifier
+                        .padding(start = 4.dp)
+                )
+
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_dropdown),
+                    tint = ColorDefault,
+                    contentDescription = "drop down",
+                    modifier = Modifier
+                        .size(32.dp)
+                        .padding(start = 4.dp)
+                )
+
+            }
 
             Divider(color = ColorDefault, thickness = 1.dp)
         }
@@ -650,7 +687,7 @@ fun EstimatedTime() {
 
         Spacer(modifier = Modifier.width(16.dp))
 
-        Column {
+        Column(modifier = Modifier.padding(start = 8.dp)) {
             Text(
                 text = "Estimated Time",
                 style = TextStyle(
@@ -658,31 +695,32 @@ fun EstimatedTime() {
                     fontFamily = fonts,
                     fontWeight = FontWeight.Normal,
                     fontSize = 12.sp
-                ),
-                modifier = Modifier.padding(start = 8.dp)
+                )
             )
 
-            BasicTextField(
-                value = estimated,
-                onValueChange = { text -> estimated = text.replace(Regex("[^0-9]"), "") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color.White)
-                    .height(32.dp),
-                maxLines = 1,
-                decorationBox = { innerTextField ->
-                    if (estimated.isEmpty()) {
-                        Text(
-                            text = hint,
-                            fontSize = 14.sp,
-                            fontFamily = fonts,
-                            fontWeight = FontWeight.Normal,
-                            color = hint_text_color
-                        )
+
+                BasicTextField(
+                    value = estimated,
+                    onValueChange = { text -> estimated = text.replace(Regex("[^0-9]"), "") },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(BackgroundColor)
+                        .height(intrinsicSize = IntrinsicSize.Min),
+                    maxLines = 1,
+                    decorationBox = { innerTextField ->
+                        if (estimated.isEmpty()) {
+                            Text(
+                                text = hint,
+                                fontSize = 14.sp,
+                                fontFamily = fonts,
+                                fontWeight = FontWeight.Normal,
+                                color = hint_text_color,
+                                modifier = Modifier.wrapContentHeight(Alignment.Bottom)
+                            )
+                        }
+                        innerTextField()
                     }
-                    innerTextField()
-                }
-            )
+                )
 
             Divider(color = ColorDefault, thickness = 1.dp)
         }
@@ -715,7 +753,7 @@ fun Category() {
 
         Spacer(modifier = Modifier.width(16.dp))
 
-        Column {
+        Column(modifier = Modifier.padding(start = 8.dp)) {
             Text(
                 text = "Category",
                 style = TextStyle(
@@ -723,13 +761,14 @@ fun Category() {
                     fontFamily = fonts,
                     fontWeight = FontWeight.Normal,
                     fontSize = 12.sp
-                ),
-                modifier = Modifier.padding(start = 6.dp)
+                )
             )
 
-            genericDropDown(text = category, hint = "")
-
-            Divider(color = ColorDefault, thickness = 1.dp)
+            dropDownMenuList(items = dropDownList)
+            Divider(
+                color = ColorDefault,
+                thickness = 1.dp,
+            )
         }
     }
 }
@@ -760,7 +799,7 @@ fun Description() {
 
         Spacer(modifier = Modifier.width(16.dp))
 
-        Column {
+        Column(modifier = Modifier.padding(start = 8.dp)) {
             Text(
                 text = "Description",
                 style = TextStyle(
@@ -768,8 +807,7 @@ fun Description() {
                     fontFamily = fonts,
                     fontWeight = FontWeight.Normal,
                     fontSize = 12.sp
-                ),
-                modifier = Modifier.padding(start = 8.dp)
+                )
             )
 
             Row(
@@ -786,8 +824,9 @@ fun Description() {
                     ),
                     modifier = Modifier
                         .weight(1f)
-                        .background(Color.White)
-                        .height(32.dp),
+                        .background(BackgroundColor)
+                        .wrapContentHeight(Alignment.Bottom)
+                        .height(IntrinsicSize.Min),
                     maxLines = 3,
                     decorationBox = { innerTextField ->
                         if (description.isEmpty()) {
@@ -796,7 +835,8 @@ fun Description() {
                                 fontSize = 14.sp,
                                 fontFamily = fonts,
                                 fontWeight = FontWeight.Normal,
-                                color = hint_text_color
+                                color = hint_text_color,
+                                modifier = Modifier.wrapContentHeight(Alignment.Bottom)
                             )
                         }
                         innerTextField()
@@ -814,7 +854,10 @@ fun Description() {
                 )
             }
 
-            Divider(color = ColorDefault, thickness = 1.dp)
+            Divider(
+                color = ColorDefault,
+                thickness = 1.dp
+            )
         }
     }
 }
@@ -959,7 +1002,7 @@ fun Tags() {
 
         Spacer(modifier = Modifier.width(16.dp))
 
-        Column {
+        Column(modifier = Modifier.padding(start = 8.dp)) {
             Text(
                 text = "Tags",
                 style = TextStyle(
@@ -967,13 +1010,15 @@ fun Tags() {
                     fontFamily = fonts,
                     fontWeight = FontWeight.Normal,
                     fontSize = 12.sp
-                ),
-                modifier = Modifier.padding(start = 6.dp)
+                )
             )
 
-            genericDropDown(text = tags, hint = tagstHint)
+            dropDownIcon(text = tags, hint = tagstHint)
 
-            Divider(color = ColorDefault, thickness = 1.dp)
+            Divider(
+                color = ColorDefault,
+                thickness = 1.dp
+            )
         }
     }
 }
@@ -1004,7 +1049,7 @@ fun Checklist() {
 
         Spacer(modifier = Modifier.width(16.dp))
 
-        Column {
+        Column(modifier = Modifier.padding(start = 8.dp)) {
             Text(
                 text = "Checklist:",
                 style = TextStyle(
@@ -1013,11 +1058,9 @@ fun Checklist() {
                     fontWeight = FontWeight.Normal,
                     fontSize = 12.sp
                 ),
-                modifier = Modifier.padding(start = 6.dp)
             )
 
-            genericDropDown(text = checklist, hint = "")
-
+            dropDownMenuList(items = dropDownList)
             Divider(color = ColorDefault, thickness = 1.dp)
         }
     }
@@ -1065,92 +1108,107 @@ fun SpareParts() {
 
 @Composable
 fun SparePartsList() {
-    val sparePartsList = remember { listOf("", "") }
+    val sparePartsList = remember { listOf("kg", "g") }
     Column(
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 8.dp, start = 24.dp, end = 8.dp)
+            .fillMaxWidth(.95f)
+            .padding(top = 8.dp, start = 48.dp, end = 12.dp)
     ) {
         sparePartsList.forEach { s ->
             SparePartRow(spareParts = s)
+            Spacer(modifier = Modifier.height(8.dp))
         }
     }
 }
 
 @Composable
-fun SparePartRow(spareParts: String) {
+fun SparePartRow(spareParts: String = "") {
     val text = "Abcdefg"
     var editText by remember { mutableStateOf("1") }
-    Surface(
-        shape = RoundedCornerShape(10.dp),
+
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(80.dp)
+            .background(White)
+            .height(70.dp)
+            .border(1.dp, ultralightGreyBlue, RoundedCornerShape(10.dp))
             .padding(10.dp),
-        color = skyBlue
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
+        Column(
+            modifier = Modifier
+                .fillMaxHeight()
+                .weight(1f)
+                .padding(start = 16.dp)
         ) {
+            Text(
+                text = text,
+                fontSize = 18.sp,
+                fontFamily = fonts,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                color = md_dark_green,
+                modifier = Modifier.padding(bottom = 4.dp)
+            )
 
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth(.8f)
-                    .weight(1f)
-                    .padding(start = 16.dp)
+            Row(
+                verticalAlignment = Alignment.Top,
+                modifier = Modifier.fillMaxSize()
             ) {
-                Text(
-                    text = text,
-                    fontSize = 20.sp,
-                    fontFamily = fonts,
-                    color = ColorDefault,
-                    modifier = Modifier.padding(bottom = 4.dp)
+                Icon(
+                    painter = painterResource(R.drawable.ic_quantity),
+                    tint = ColorDefault,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp),
                 )
 
-                Row {
-
-                    Icon(
-                        painter = painterResource(R.drawable.ic_quantity),
-                        contentDescription = null,
-                        modifier = Modifier
-                            .size(24.dp)
-                            .padding(bottom = 4.dp),
-                    )
-
-                    Text(
-                        text = text,
-                        fontSize = 14.sp,
-                        fontFamily = fonts,
-                        color = ColorDefault,
-                        modifier = Modifier.padding(bottom = 4.dp, start = 8.dp)
-                    )
-
-                }
-
+                Text(
+                    text = spareParts,
+                    fontSize = 12.sp,
+                    fontFamily = fonts,
+                    fontWeight = FontWeight.Normal,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    color = md_dark_green,
+                    modifier = Modifier.padding(bottom = 4.dp, start = 8.dp)
+                )
             }
+        }
 
+        Box(
+            modifier = Modifier
+                .fillMaxWidth(.22f)
+                .fillMaxHeight(.82f)
+                .border(1.dp, ultralightGreyBlue, RoundedCornerShape(6.dp))
+                .padding(end = 4.dp),
+        ) {
             BasicTextField(
                 value = editText,
                 onValueChange = { text -> editText = text },
-                textStyle = LocalTextStyle.current.copy(textAlign = TextAlign.Center),
-                modifier = Modifier
-                    .padding(end = 16.dp)
-                    .width(40.dp)
-                    .clip(RoundedCornerShape(2.dp))
-                    .background(TextWhite),
+                maxLines = 1,
+                modifier = Modifier.fillMaxSize().wrapContentWidth(Alignment.CenterHorizontally).wrapContentHeight(Alignment.CenterVertically),
+                textStyle = TextStyle(
+                    fontFamily = fonts,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 18.sp,
+                    textAlign = TextAlign.Center
+                ),
+
             )
 
-            Icon(
-                painter = painterResource(R.drawable.icon_delete_20),
-                tint = ColorDefault,
-                contentDescription = null,
-                modifier = Modifier
-                    .size(35.dp)
-                    .padding(8.dp)
-                    .clickable { },
-            )
         }
+
+        Icon(
+            painter = painterResource(R.drawable.icon_delete_20),
+            tint = ColorDefault,
+            contentDescription = null,
+            modifier = Modifier
+                .weight(.3f)
+                .size(35.dp)
+                .padding(8.dp)
+                .clickable {},
+        )
     }
 }
 
@@ -1200,8 +1258,8 @@ fun DocumentList() {
 
     Column(
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 8.dp, start = 24.dp, end = 8.dp)
+            .fillMaxWidth(.95f)
+            .padding(top = 8.dp, start = 48.dp, end = 12.dp)
     ) {
         documentList.forEach { document ->
             DocumentRow(item = document)
@@ -1214,50 +1272,46 @@ fun DocumentRow(item: String) {
     val itemDate = "123"
     val category = "pta nhi"
     var isImageLoaded by remember { mutableStateOf(false) }
-    var imageResource : Painter? = null
 
     Card(
-        shape = RoundedCornerShape(10.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = light_green,
-        ),
+        colors = CardDefaults.cardColors(containerColor = White),
         modifier = Modifier
             .fillMaxWidth()
-            .fillMaxHeight(.2f)
-            .padding(8.dp)
+            .height(80.dp)
+            .border(0.5.dp, greenTransparent, RoundedCornerShape(10.dp))
     ) {
         Row(
             modifier = Modifier
-                .fillMaxWidth()
+                .fillMaxSize()
                 .padding(8.dp)
-                .background(light_green),
+                .background(White),
 
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-
             Box(
                 modifier = Modifier
                     .size(height = 56.dp, width = 58.dp)
-                    .clip(RoundedCornerShape(10.dp))
+                    .border(0.5.dp, greenTransparent, RoundedCornerShape(10.dp))
             ) {
-                if (imageResource == null || !isImageLoaded) {
-                    CircularProgressIndicator(
-                        color = skyBlue,
-                        strokeWidth = Dp(value = 4F)
-                    )
-                    imageResource = painterResource(id = R.drawable.ic_assignee_small)
+                Crossfade(targetState = isImageLoaded) { targetState ->
+                    if (targetState) {
+                        Image(
+                            painter = painterResource(id = R.drawable.ic_assignee_small),
+                            contentDescription = null,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    } else {
+                        CircularProgressIndicator(
+                            color = skyBlue,
+                            strokeWidth = Dp(value = 4F),
+                            modifier = Modifier
+                                .fillMaxSize(.8f)
+                                .align(Alignment.Center)
+                        )
+                    }
                 }
-                imageResource?.let { i ->
-                    Image(
-                        painter = i,
-                        contentDescription = null,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                }
-
-
-                if (imageResource != null && !isImageLoaded) {
+                if (!isImageLoaded) {
                     LaunchedEffect(true) {
                         delay(2000)
                         isImageLoaded = true
@@ -1265,22 +1319,26 @@ fun DocumentRow(item: String) {
                 }
             }
 
+
             Column(
                 modifier = Modifier
-                    .fillMaxWidth(.9f)
-                    .padding(horizontal = 8.dp)
+                    .width(IntrinsicSize.Max)
+                    .height(IntrinsicSize.Max)
                     .weight(1f)
             ) {
                 Text(
                     text = item,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 16.dp),
+                        .padding(top = 4.dp, start = 12.dp),
                     maxLines = 1,
+                    style = TextStyle(
+                        color = md_dark_green,
+                        fontFamily = fonts,
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 16.sp
+                    ),
                     overflow = TextOverflow.Ellipsis,
-                    fontFamily = FontFamily.Default,
-                    fontSize = 16.sp,
-                    color = Color.Black
                 )
 
                 Text(
@@ -1288,9 +1346,13 @@ fun DocumentRow(item: String) {
                     modifier = Modifier
                         .fillMaxWidth()
                         .align(Alignment.CenterHorizontally)
-                        .padding(top = 8.dp, start = 8.dp),
-                    fontSize = 12.sp,
-                    color = Color.Black
+                        .padding(top = 8.dp, start = 12.dp, bottom = 4.dp),
+                    style = TextStyle(
+                        color = md_dark_green,
+                        fontFamily = fonts,
+                        fontWeight = FontWeight.Normal,
+                        fontSize = 12.sp
+                    ),
                 )
             }
 
@@ -1301,7 +1363,7 @@ fun DocumentRow(item: String) {
                 tint = ColorDefault,
                 contentDescription = null,
                 modifier = Modifier
-                    .size(30.dp)
+                    .size(28.dp)
                     .padding(end = 4.dp)
                     .clickable {}
             )
@@ -1327,6 +1389,9 @@ fun DynamicView(customField: List<String>) {
 @Composable
 fun CustomFields(customField: String) {
     var fieldValue by remember { mutableStateOf("") }
+    var label by remember {
+        mutableStateOf("abcd")
+    }
     var hint = "Numeric"
 
     Row(
@@ -1350,25 +1415,25 @@ fun CustomFields(customField: String) {
 
         Spacer(modifier = Modifier.width(16.dp))
 
-        Column {
+        Column(modifier = Modifier.padding(start = 8.dp)) {
             Text(
-                text = "adka",
+                text = label,
                 style = TextStyle(
                     color = ColorDefault,
                     fontFamily = fonts,
                     fontWeight = FontWeight.Normal,
                     fontSize = 14.sp
-                ),
-                modifier = Modifier.padding(start = 6.dp)
+                )
             )
+
             if (customField != "123") {
                 BasicTextField(
                     value = fieldValue,
                     onValueChange = { text -> fieldValue = text },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(Color.White)
-                        .height(32.dp),
+                        .background(BackgroundColor)
+                        .height(IntrinsicSize.Min),
                     maxLines = 1,
                     decorationBox = { innerTextField ->
                         if (fieldValue.isEmpty()) {
@@ -1377,16 +1442,16 @@ fun CustomFields(customField: String) {
                                 fontSize = 14.sp,
                                 fontFamily = fonts,
                                 fontWeight = FontWeight.Normal,
-                                color = hint_text_color
+                                color = hint_text_color,
+                                modifier = Modifier.wrapContentHeight(Alignment.Bottom)
                             )
                         }
                         innerTextField()
                     }
                 )
             } else {
-                genericDropDown(fieldValue, "")
+                dropDownMenuList(items = dropDownList)
             }
-
 
             Divider(color = ColorDefault, thickness = 1.dp)
         }
@@ -1457,10 +1522,10 @@ fun ShowMore() {
 }
 
 @Composable
-fun genericDropDown(text: String, hint: String) {
+fun dropDownIcon(text: String, hint: String) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min)
     ) {
         Text(
             text = if (text.isNullOrEmpty()) hint else text,
@@ -1488,6 +1553,74 @@ fun genericDropDown(text: String, hint: String) {
         )
 
     }
+}
+
+@Composable
+fun dropDownMenuList(items: List<String>) {
+    var expanded by remember { mutableStateOf(false) }
+    var selectedIndex by remember { mutableStateOf(0) }
+    var selectedItem by remember { mutableStateOf(items[selectedIndex]) }
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(IntrinsicSize.Min)
+            .clickable { expanded = true }
+    ) {
+        Text(
+            text = selectedItem,
+            style = TextStyle(
+                color = mediumBlack,
+                fontFamily = fonts,
+                fontWeight = FontWeight.Medium,
+                fontSize = 13.sp
+            ),
+            modifier = Modifier
+                .fillMaxWidth(.9f)
+                .weight(1f)
+                .padding(top = 8.dp, start = 4.dp)
+        )
+
+        Icon(
+            painter = painterResource(id = R.drawable.ic_dropdown),
+            tint = ColorDefault,
+            contentDescription = "drop down",
+            modifier = Modifier
+                .size(32.dp)
+                .padding(start = 4.dp)
+        )
+
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+            modifier = Modifier
+                .fillMaxWidth(.8f)
+                .background(White)
+        ) {
+            items.forEachIndexed { index, item ->
+                DropdownMenuItem(
+
+                    onClick = {
+                        selectedItem = item
+                        expanded = false
+                        selectedIndex = index
+                    },
+                    modifier = Modifier.background(White),
+                    text = {
+                        if (expanded) {
+                            Text(text = item)
+                        }
+                    }
+                )
+
+                if (index < items.size - 1) {
+                    Divider(color = lightBlack, thickness = 0.3.dp)
+                }
+            }
+        }
+
+    }
+
 }
 
 @Preview
